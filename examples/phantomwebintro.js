@@ -1,14 +1,16 @@
 var fs = require('fs');
 
 //Define url for testing site
+// var url = 'https://theseedcompany.org';
 var url = 'http://test-seed-company.pantheonsite.io';
 var i = 0;
 var t = 1;
 //Pull needed files
 var projects = pullProjects();
-var data     = pullData();
+// var data     = pullData();
 //Initialize scrape
-urlTesting(projects, data);
+
+urlTesting(projects);
 
 function pullProjects(){
   //Define projects array
@@ -26,24 +28,24 @@ function pullProjects(){
   file_projects.close();
   return projects;
 }
+//
+// function pullData(){
+//   //Define data array
+//   var data = [];
+//   //Get correct data
+//   console.log('Loading book1.csv......................');
+//   var file_data = fs.open('book1.csv','r');
+//   var line = file_data.readLine();
+//
+//   while(line){
+//     data.push(line);
+//     line = file_data.readLine();
+//   }
+//   file_data.close();
+//   return data;
+// }
 
-function pullData(){
-  //Define data array
-  var data = [];
-  //Get correct data
-  console.log('Loading book1.csv......................');
-  var file_data = fs.open('book1.csv','r');
-  var line = file_data.readLine();
-
-  while(line){
-    data.push(line);
-    line = file_data.readLine();
-  }
-  file_data.close();
-  return data;
-}
-
-function urlTesting(projects,data){
+function urlTesting(projects){
   //Define success and set to false until proven true...
   var success = false;
   //Loop through project links
@@ -62,7 +64,6 @@ function urlTesting(projects,data){
 }
 
 function scrapeUrl(url, callback) {
-  console.log(url);
     // Read the Phantom webpage '.version' element text using jQuery and "includeJs"
     "use strict";
     var page = require('webpage').create();
@@ -79,7 +80,12 @@ function scrapeUrl(url, callback) {
                     //Get value
                     var projectName = $("#node-project-full-group-wrapper > div > div > h1").text();
                     if (projectName == ''){
-                      projectName = 'NULL';
+                      projectName = $("#node-language-full-group-lang-top-wrapper > div > div > h1").text();
+                      if (projectName == ''){
+                        projectName = 'NULL';
+                      }else{
+                        var langFlag = true;
+                      }
                     }
                     var products =  $("div.view-header > h3").text();
                     if (products == ''){
@@ -92,15 +98,19 @@ function scrapeUrl(url, callback) {
                     // console.log(projectInfo);
                     if(projectInfo != ''){
                       var startYear = projectInfo.split('Start Year');
-                      var endYear = projectInfo.split('People Impacted');
-                      endYear = endYear[1].split('End Year');
-                      var tscPop = projectInfo.split('Start Year');
-                      tscPop = tscPop[1].split('People Impacted');
+                      var endYear   = projectInfo.split('People Impacted');
+                      if(langFlag){
+                        endYear       = endYear[1].split('Est. End Year');
+                      }else{
+                        endYear = endYear[1].split('End Year');
+                      }
+                      var tscPop    = projectInfo.split('Start Year');
+                      tscPop        = tscPop[1].split('People Impacted');
 
                     } else{
                       startYear = 'NULL';
-                      endYear = 'NULL';
-                      tscPop = 'NULL';
+                      endYear   = 'NULL';
+                      tscPop    = 'NULL';
                     }
                     var prayerCommits =  $("span.how-few").text();
                     if (prayerCommits == ''){
@@ -125,8 +135,10 @@ function scrapeUrl(url, callback) {
                       totalNeed = totalNeed.split('Total Need ');
                       totalNeed = totalNeed[1];
                     }
-                    console.log(projectName+','+products+','+startYear[0].trim()+','+endYear[0].trim()+',"'+tscPop[0].trim()+'",'+prayerCommits+','+prayerNeeded+',"'+remainingNeed+'","'+totalNeed+'"');
 
+                    csvOutput = '"'+  projectName  +'","'+  startYear[0].trim()  +'","'+  endYear[0].trim()  +'","'+ tscPop[0].trim()+'","'+remainingNeed+'","'+totalNeed+'","'+prayerCommits+'","'+prayerNeeded+'","'+products.trim()+'"';
+                    // csvOutput = '"'+ remainingNeed+'","'+totalNeed+'","'+products.trim()+'"';
+                    console.log(csvOutput);
                     // var endYear =  $("field field-type-number-integer:second").text();
                     // console.log("EndYr: "+endYear+',');
                     // var tscPop =  $("field field-type-number-integer:third").text();
